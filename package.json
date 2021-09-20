@@ -1,0 +1,23 @@
+{
+  "name": "redfb",
+  "version": "1.0.0",
+  "description": "Translation Queue that Publish Reddit Posts to Facebook pages",
+  "main": "dist/index.js",
+  "scripts": {
+    "run": "node dist/index.js",
+    "build":"tsc",
+    "watch-ts":"tsc --watch",
+    "watch-node":"nodemon"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nabildroid/redfb.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nabildroid/redfb/issues"
+  },
+  "homepage": "https://github.com/nabildroid/redfb#readme"
+}
