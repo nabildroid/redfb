@@ -14,7 +14,7 @@ export default class Facebook implements IFacebook {
 		this.client = client;
 	}
 
-	post(post: Post): Promise<void> {
-		throw new Error("Method not implemented.");
+	async post(post: Post): Promise<void> {
+		console.log("posing " + post.id + " in facebook page @" + this.id);
 	}
 }

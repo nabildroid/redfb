@@ -8,4 +8,5 @@ export default interface Config {
 	ins_outs: { [key: string]: string };
 	scheduler: Scheduler;
 	facebook_auth: string;
+	translation_auth: string;
 }

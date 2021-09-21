@@ -1,6 +1,7 @@
 import Config from "../entities/config";
 import Post, { Content, PostState } from "../entities/post";
 import admin from "firebase-admin";
+import { objectify } from "../utils";
 
 export interface IStore {
 	getConfig(): Promise<Config>;
@@ -11,12 +12,13 @@ export interface IStore {
 	push(content: Content, id: string, source: string): Promise<void>;
 
 	move(id: string, translation: string): Promise<void>;
+	done(id: string): Promise<void>;
 }
 const CONFIG = "/config/config";
 const POSTS = "/posts";
 
 export default class Store implements IStore {
-	readonly db: FirebaseFirestore.Firestore;
+	private readonly db: FirebaseFirestore.Firestore;
 	constructor(auth: object) {
 		admin.initializeApp({
 			credential: admin.credential.cert(auth),
@@ -42,6 +44,12 @@ export default class Store implements IStore {
 				(() => {
 					throw Error("facebook auth token doesn't exists");
 				})(),
+			translation_auth:
+				data.translation_auth ||
+				process.env.TRANSLATION_AUTH ||
+				(() => {
+					throw Error("translation_auth token doesn't exists");
+				})(),
 		};
 
 		if (!doc.exists) {
@@ -55,13 +63,13 @@ export default class Store implements IStore {
 	}
 
 	async getPublishQueue(): Promise<Post[]> {
-		const docs = await this.filterPostByState(PostState.published);
+		const docs = await this.filterPostByState(PostState.translated);
 		if (docs.size) {
 			return docs.docs.map(this.converPostDocToPost);
 		} else return [];
 	}
 	async getTranslationQueue(): Promise<Post[]> {
-		const docs = await this.filterPostByState(PostState.translated);
+		const docs = await this.filterPostByState(PostState.pure);
 		if (docs.size) {
 			return docs.docs.map(this.converPostDocToPost);
 		} else return [];
@@ -71,24 +79,33 @@ export default class Store implements IStore {
 		const post: Post = {
 			id,
 			state: PostState.pure,
-			content,
+			content: objectify(content),
 			source,
 			date: new Date(),
 		};
 
+		console.log({
+			...post,
+			date: admin.firestore.Timestamp.fromDate(post.date),
+		});
 		await this.db
 			.collection(POSTS)
 			.doc(id)
 			.set({
 				...post,
-				data: FirebaseFirestore.Timestamp.fromDate(post.date),
+				date: admin.firestore.Timestamp.fromDate(post.date),
 			});
 	}
 
 	async move(id: string, translation: string): Promise<void> {
-		await this.db.collection(POSTS).doc(id).set({
+		await this.db.collection(POSTS).doc(id).update({
 			"content.translation": translation,
 			state: PostState.translated,
+		});
+	}
+	async done(id: string) {
+		this.db.collection(POSTS).doc(id).update({
+			state: PostState.published,
 		});
 	}
 
