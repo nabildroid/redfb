@@ -15,7 +15,6 @@ class _HomeState extends State<Home> {
   Post? post;
   bool showPost = false;
   late TextEditingController _controller;
-
   @override
   void initState() {
     super.initState();
@@ -58,87 +57,101 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Scaffold(
       body: SizedBox.expand(
         child: post == null
             ? Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0).copyWith(
-                    top: 24,
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.label,
-                            color: Theme.of(context).primaryColor,
+            : Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0).copyWith(
+                  top: 24,
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.label,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                        SizedBox(
+                          width: 4,
+                        ),
+                        Text(
+                          post!.source,
+                          style: Theme.of(context).textTheme.headline5,
+                        ),
+                        Spacer(),
+                        if (size.height < 500) ...[
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            color: Colors.redAccent,
+                            onPressed: () {},
                           ),
-                          SizedBox(
-                            width: 4,
+                          SizedBox(height: 8),
+                          if (showPost)
+                            IconButton(
+                              icon: Icon(Icons.send),
+                              onPressed: publish,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                        ]
+                      ],
+                    ),
+                    SizedBox(
+                      height: 24,
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            offset: Offset(1, 1),
+                            color: Colors.black12,
+                            blurRadius: 5,
+                            spreadRadius: 3,
                           ),
-                          Text(
-                            post!.source,
-                            style: Theme.of(context).textTheme.headline5,
-                          )
                         ],
                       ),
-                      SizedBox(
-                        height: 24,
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                              offset: Offset(1, 1),
-                              color: Colors.black12,
-                              blurRadius: 5,
-                              spreadRadius: 3,
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Text(
+                            post!.content.origin,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
                             ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          children: [
-                            Text(
-                              post!.content.origin,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Divider(
+                          ),
+                          Divider(
+                            color: Colors.black54,
+                            height: 26,
+                          ),
+                          Text(
+                            post!.content.generatedTranslation,
+                            style: TextStyle(
                               color: Colors.black54,
-                              height: 26,
                             ),
-                            Text(
-                              post!.content.generatedTranslation,
-                              style: TextStyle(
-                                color: Colors.black54,
-                              ),
+                          ),
+                        ],
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextField(
+                        controller: _controller,
+                        autofocus: true,
+                        minLines: 6,
+                        textDirection: TextDirection.rtl,
+                        maxLines: 10,
+                        style: Theme.of(context).textTheme.bodyText1?.copyWith(
+                              height: 2,
                             ),
-                          ],
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                        ),
                       ),
-                      SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: TextField(
-                          controller: _controller,
-                          minLines: 6,
-                          textDirection: TextDirection.rtl,
-                          maxLines: 10,
-                          style:
-                              Theme.of(context).textTheme.bodyText1?.copyWith(
-                                    height: 2,
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
       ),
@@ -147,17 +160,19 @@ class _HomeState extends State<Home> {
         children: [
           Column(
             children: [
-              FloatingActionButton(
-                child: Icon(Icons.delete),
-                backgroundColor: Colors.redAccent,
-                onPressed: () {},
-              ),
-              SizedBox(height: 8),
-              if (showPost)
+              if (size.height >= 500) ...[
                 FloatingActionButton(
-                  child: Icon(Icons.send),
-                  onPressed: publish,
+                  child: Icon(Icons.delete),
+                  backgroundColor: Colors.redAccent,
+                  onPressed: () {},
                 ),
+                SizedBox(height: 8),
+                if (showPost)
+                  FloatingActionButton(
+                    child: Icon(Icons.send),
+                    onPressed: publish,
+                  ),
+              ],
             ],
           )
         ],
