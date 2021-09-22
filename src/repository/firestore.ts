@@ -19,7 +19,7 @@ const POSTS = "/posts";
 
 export default class Store implements IStore {
 	private readonly db: FirebaseFirestore.Firestore;
-	constructor(auth: object) {
+	constructor(auth: any) {
 		admin.initializeApp({
 			credential: admin.credential.cert(auth),
 		});
