@@ -5,7 +5,8 @@ import 'package:redfb/repository/server.dart';
 import 'models/post.dart';
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  final Post? post;
+  const Home(this.post, {Key? key}) : super(key: key);
 
   @override
   _HomeState createState() => _HomeState();
@@ -14,7 +15,16 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   Post? post;
   bool showPost = false;
+  late Server server;
+
   late TextEditingController _controller;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -23,159 +33,165 @@ class _HomeState extends State<Home> {
     _controller.addListener(() {
       setState(() => showPost = _controller.value.text.length > 30);
     });
-    this.chooseRandomPost();
+    post = widget.post;
+    server = Server();
+
+    if (post == null) {
+      ensurePostExist();
+    }
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void ensurePostExist() async {
+    final posts = await server.getQueue();
+    await LocalStore().save(posts);
+
+    post = await LocalStore().random();
+    setState(() {});
   }
 
-  void publish() {
-    Server()..move(post!.id, _controller.text).then((value) => {});
+  void publish() async {
+    final id = post!.id;
 
     setState(() {
       post = null;
     });
-  }
-
-  void chooseRandomPost() async {
-    final localStore = LocalStore();
-    var randomPost = await localStore.random();
-    if (randomPost == null) {
-      final server = Server();
-      final posts = await server.getQueue();
-      await localStore.save(posts);
-      randomPost = await localStore.random();
-    }
-
-    setState(() {
-      post = randomPost!;
-    });
+    await server.move(id, _controller.text).then((value) => {});
+    await LocalStore().remove(id);
+    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    return Scaffold(
-      body: SizedBox.expand(
-        child: post == null
-            ? Center(child: CircularProgressIndicator())
-            : Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0).copyWith(
-                  top: 24,
-                ),
-                child: Column(
-                  children: [
-                    Row(
+    print(size.height);
+    return SafeArea(
+      child: Scaffold(
+        body: SizedBox.expand(
+          child: post == null
+              ? const Center(child: CircularProgressIndicator())
+              : Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0).copyWith(
+                    top: 24,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
                       children: [
-                        Icon(
-                          Icons.label,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                        SizedBox(
-                          width: 4,
-                        ),
-                        Text(
-                          post!.source,
-                          style: Theme.of(context).textTheme.headline5,
-                        ),
-                        Spacer(),
-                        if (size.height < 500) ...[
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            color: Colors.redAccent,
-                            onPressed: () {},
-                          ),
-                          SizedBox(height: 8),
-                          if (showPost)
-                            IconButton(
-                              icon: Icon(Icons.send),
-                              onPressed: publish,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.label,
                               color: Theme.of(context).primaryColor,
                             ),
-                        ]
+                            const SizedBox(
+                              width: 4,
+                            ),
+                            Text(
+                              post!.id,
+                              style: Theme.of(context).textTheme.headline5,
+                            ),
+                            const Spacer(),
+                            if (size.height < 500) ...[
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                color: Colors.redAccent,
+                                onPressed: () {},
+                              ),
+                              const SizedBox(height: 8),
+                              if (showPost)
+                                IconButton(
+                                  icon: const Icon(Icons.send),
+                                  onPressed: publish,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                            ]
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 24,
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: const [
+                              BoxShadow(
+                                offset: Offset(1, 1),
+                                color: Colors.black12,
+                                blurRadius: 5,
+                                spreadRadius: 3,
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            children: [
+                              Text(
+                                post!.content.origin,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.5,
+                                ),
+                              ),
+                              const Divider(
+                                color: Colors.black54,
+                                height: 26,
+                              ),
+                              Text(
+                                post!.content.generatedTranslation,
+                                style: const TextStyle(
+                                  color: Colors.black54,
+                                  height: 1,
+                                ),
+                              ),
+                            ],
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: size.width - 100,
+                          child: TextField(
+                            controller: _controller,
+                            autofocus: true,
+                            minLines: 6,
+                            textDirection: TextDirection.rtl,
+                            maxLines: 10,
+                            style:
+                                Theme.of(context).textTheme.bodyText1?.copyWith(
+                                      height: 2,
+                                    ),
+                          ),
+                        ),
                       ],
+                      crossAxisAlignment: CrossAxisAlignment.start,
                     ),
-                    SizedBox(
-                      height: 24,
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: [
-                          BoxShadow(
-                            offset: Offset(1, 1),
-                            color: Colors.black12,
-                            blurRadius: 5,
-                            spreadRadius: 3,
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          Text(
-                            post!.content.origin,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Divider(
-                            color: Colors.black54,
-                            height: 26,
-                          ),
-                          Text(
-                            post!.content.generatedTranslation,
-                            style: TextStyle(
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextField(
-                        controller: _controller,
-                        autofocus: true,
-                        minLines: 6,
-                        textDirection: TextDirection.rtl,
-                        maxLines: 10,
-                        style: Theme.of(context).textTheme.bodyText1?.copyWith(
-                              height: 2,
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-      ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Column(
-            children: [
-              if (size.height >= 500) ...[
-                FloatingActionButton(
-                  child: Icon(Icons.delete),
-                  backgroundColor: Colors.redAccent,
-                  onPressed: () {},
-                ),
-                SizedBox(height: 8),
-                if (showPost)
-                  FloatingActionButton(
-                    child: Icon(Icons.send),
-                    onPressed: publish,
                   ),
+                ),
+        ),
+        floatingActionButton: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Column(
+              children: [
+                if (size.height >= 500 && post != null) ...[
+                  FloatingActionButton(
+                    child: const Icon(Icons.delete),
+                    backgroundColor: Colors.redAccent,
+                    onPressed: () async {
+                      await LocalStore().remove(post!.id);
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  if (showPost)
+                    FloatingActionButton(
+                      child: const Icon(Icons.send),
+                      onPressed: publish,
+                    ),
+                ],
               ],
-            ],
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
