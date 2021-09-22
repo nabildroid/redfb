@@ -3,7 +3,6 @@ const app = Express();
 
 app.use(Express.json());
 
-import serviceAccount from "../service-account.json";
 import Config from "./entities/config";
 import Facebook from "./repository/facebook";
 import FacebookClient from "./repository/facebookClient";
@@ -12,7 +11,7 @@ import { Reddit } from "./repository/reddit";
 import Translate, { ITranslate } from "./repository/translate";
 import serviceAccount from "../service-account.json";
 
-const isProd = process.env.MODE == "production";
+const isProd = process.env.NODE_ENV == "production";
 const store = new Store(isProd ? process.env.SERVICE_ACCOUNT : serviceAccount);
 
 let translation: ITranslate;
