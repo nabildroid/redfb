@@ -10,10 +10,12 @@ import FacebookClient from "./repository/facebookClient";
 import Store from "./repository/firestore";
 import { Reddit } from "./repository/reddit";
 import Translate, { ITranslate } from "./repository/translate";
+import serviceAccount from "../service-account.json";
 
-const store = new Store(serviceAccount);
+const isProd = process.env.MODE == "production";
+const store = new Store(isProd ? process.env.SERVICE_ACCOUNT : serviceAccount);
+
 let translation: ITranslate;
-
 let config: Config;
 
 app.get("/extract", async (req, res) => {
