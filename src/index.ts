@@ -78,7 +78,7 @@ app.post("/publish", async (req, res) => {
 			const pageId = config.ins_outs[post.source];
 			const page = new Facebook(pageId, FBClient);
 
-			await page.post(post);
+			await page.post(post.content);
 			await store.done(post.id);
 		}
 
