@@ -20,18 +20,31 @@ export default class FacebookClient implements IFacebookClient {
 			},
 		});
 	}
+
 	async post(pageId: string, message: string): Promise<void> {
-		await this.client.get(`${pageId}/feed`, {
-			params: { message },
-		});
+		try {
+			const response = await this.client.post(
+				`${pageId}/feed`,
+				{},
+				{
+					params: { message },
+				}
+			);
+		} catch (error) {
+			console.error(error);
+		}
 	}
 	async postImage(
 		pageId: string,
 		image_url: string,
 		message?: string
 	): Promise<void> {
-		await this.client.get(`${pageId}/photos`, {
-			params: { message, url: image_url },
-		});
+		await this.client.post(
+			`${pageId}/photos`,
+			{},
+			{
+				params: { message, url: image_url },
+			}
+		);
 	}
 }
