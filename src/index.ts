@@ -9,10 +9,14 @@ import FacebookClient from "./repository/facebookClient";
 import Store from "./repository/firestore";
 import { Reddit } from "./repository/reddit";
 import Translate, { ITranslate } from "./repository/translate";
-import serviceAccount from "../service-account.json";
+import LocalServiceAccount from "../service-account.json";
 
 const isProd = process.env.NODE_ENV == "production";
-const store = new Store(isProd ? process.env.SERVICE_ACCOUNT : serviceAccount);
+const serviceAccount = isProd
+	? JSON.parse(process.env.SERVICE_ACCOUNT as string)
+	: LocalServiceAccount;
+
+const store = new Store(serviceAccount);
 
 let translation: ITranslate;
 let config: Config;
