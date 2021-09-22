@@ -10,7 +10,7 @@ abstract class IServer {
 }
 
 class Server implements IServer {
-  static const baseURL = "http://192.168.43.198:8080";
+  static const baseURL = "https://reffb.herokuapp.com";
 
   Uri _api(String endpoint) {
     return Uri.parse(Server.baseURL + "/" + endpoint);
